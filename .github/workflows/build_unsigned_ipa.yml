@@ -1,38 +1,38 @@
 name: Build Unsigned IPA
 
 on:
-  push:
-    branches: [main, master]
   workflow_dispatch:
+  push:
+    branches: [master, main]
 
 jobs:
-  build:
-    name: Build outfit_diary-unsigned IPA
+  build_ios:
     runs-on: macos-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.27.0'
+          channel: stable
 
-      - name: Install dependencies
+      - name: Get dependencies
         run: flutter pub get
 
-      - name: Build iOS
-        run: |
-          flutter build ios --release --no-codesign
-          mkdir -p build/ios/Payload
-          cp -r build/ios/Release-iphoneos/Runner.app build/ios/Payload/
-          cd build/ios
-          zip -r ../../../outfit_diary-unsigned.ipa Payload/
+      - name: Build unsigned IPA
+        run: flutter build ios --release --no-codesign
 
-      - name: Upload IPA artifact
+      - name: Package IPA
+        run: |
+          mkdir -p output
+          cd build/ios/iphoneos
+          mkdir -p Payload
+          cp -r Runner.app Payload/
+          zip -qr ../../../output/outfit_diary-unsigned.ipa Payload/
+          cd ../../..
+
+      - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
-          name: outfit_diary-unsigned
-          path: outfit_diary-unsigned.ipa
-          retention-days: 90
+          name: outfit_diary-unsigned-ipa
+          path: output/outfit_diary-unsigned.ipa
