@@ -1,0 +1,38 @@
+name: Build Unsigned IPA
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build outfit_diary-unsigned IPA
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.27.0'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build iOS
+        run: |
+          flutter build ios --release --no-codesign
+          mkdir -p build/ios/Payload
+          cp -r build/ios/Release-iphoneos/Runner.app build/ios/Payload/
+          cd build/ios
+          zip -r ../../../outfit_diary-unsigned.ipa Payload/
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: outfit_diary-unsigned
+          path: outfit_diary-unsigned.ipa
+          retention-days: 90
